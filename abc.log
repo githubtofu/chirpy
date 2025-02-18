@@ -1,0 +1,38 @@
+== Info: Host localhost:8080 was resolved.
+== Info: IPv6: ::1
+== Info: IPv4: 127.0.0.1
+== Info:   Trying [::1]:8080...
+== Info: Connected to localhost (::1) port 8080
+=> Send header, 148 bytes (0x94)
+0000: 50 4f 53 54 20 2f 61 70 69 2f 76 61 6c 69 64 61 POST /api/valida
+0010: 74 65 5f 63 68 69 72 70 20 48 54 54 50 2f 31 2e te_chirp HTTP/1.
+0020: 31 0d 0a 48 6f 73 74 3a 20 6c 6f 63 61 6c 68 6f 1..Host: localho
+0030: 73 74 3a 38 30 38 30 0d 0a 55 73 65 72 2d 41 67 st:8080..User-Ag
+0040: 65 6e 74 3a 20 63 75 72 6c 2f 38 2e 35 2e 30 0d ent: curl/8.5.0.
+0050: 0a 41 63 63 65 70 74 3a 20 2a 2f 2a 0d 0a 43 6f .Accept: */*..Co
+0060: 6e 74 65 6e 74 2d 54 79 70 65 3a 20 61 70 70 6c ntent-Type: appl
+0070: 69 63 61 74 69 6f 6e 2f 6a 73 6f 6e 0d 0a 43 6f ication/json..Co
+0080: 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20 32 39 ntent-Length: 29
+0090: 0d 0a 0d 0a                                     ....
+=> Send data, 29 bytes (0x1d)
+0000: 7b 22 62 6f 64 79 22 3a 22 73 6f 6d 65 74 68 69 {"body":"somethi
+0010: 6e 67 20 66 6f 72 20 62 6f 64 79 22 7d          ng for body"}
+<= Recv header, 17 bytes (0x11)
+0000: 48 54 54 50 2f 31 2e 31 20 32 30 30 20 4f 4b 0d HTTP/1.1 200 OK.
+0010: 0a                                              .
+<= Recv header, 37 bytes (0x25)
+0000: 44 61 74 65 3a 20 54 75 65 2c 20 31 38 20 46 65 Date: Tue, 18 Fe
+0010: 62 20 32 30 32 35 20 32 32 3a 33 30 3a 33 34 20 b 2025 22:30:34 
+0020: 47 4d 54 0d 0a                                  GMT..
+<= Recv header, 20 bytes (0x14)
+0000: 43 6f 6e 74 65 6e 74 2d 4c 65 6e 67 74 68 3a 20 Content-Length: 
+0010: 31 34 0d 0a                                     14..
+<= Recv header, 41 bytes (0x29)
+0000: 43 6f 6e 74 65 6e 74 2d 54 79 70 65 3a 20 74 65 Content-Type: te
+0010: 78 74 2f 70 6c 61 69 6e 3b 20 63 68 61 72 73 65 xt/plain; charse
+0020: 74 3d 75 74 66 2d 38 0d 0a                      t=utf-8..
+<= Recv header, 2 bytes (0x2)
+0000: 0d 0a                                           ..
+<= Recv data, 14 bytes (0xe)
+0000: 7b 22 76 61 6c 69 64 22 3a 74 72 75 65 7d       {"valid":true}
+== Info: Connection #0 to host localhost left intact
