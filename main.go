@@ -12,8 +12,10 @@ type apiConfig struct {
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-    cfg.fileserverHits.Add(1)
-    return next
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg.fileserverHits.Add(1)
+		next.ServeHTTP(w, r)
+    }
 }
 
 func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
@@ -46,6 +48,6 @@ func main(){
     sMux.HandleFunc("/healthz", hHandler)
     sMux.HandleFunc("/metrics", cfg.countHandler)
     sMux.HandleFunc("/reset", cfg.resetHandler)
-    sMux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
+    sMux.Handle("/app/", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
     hServer.ListenAndServe()
 }
