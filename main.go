@@ -12,10 +12,11 @@ type apiConfig struct {
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
+    //HandlerFunc(f)  -> Handler that calls f
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cfg.fileserverHits.Add(1)
 		next.ServeHTTP(w, r)
-    }
+    })
 }
 
 func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
@@ -29,7 +30,7 @@ func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
 func (cfg *apiConfig) countHandler(w http.ResponseWriter, req *http.Request) {
     w.Header().Set("Content-Type", "text/plain; charset=utf-8")
     w.WriteHeader(200)
-    w.Write([]byte(fmt.Sprintf("Hit is: %d",cfg.fileserverHits.Load())))
+    w.Write([]byte(fmt.Sprintf("Hits: %d",cfg.fileserverHits.Load())))
 }
 
 func hHandler(w http.ResponseWriter, req *http.Request) {
