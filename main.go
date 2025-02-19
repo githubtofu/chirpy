@@ -1,16 +1,24 @@
 package main
 
+import _ "github.com/lib/pq"
+
 import (
     "net/http"
     "sync/atomic"
     "strconv"
     "fmt"
-    "encoding/json"
-    "log"
+    "strings"
+    "github.com/githubtofu/chirpy/internal/database"
+    "github.com/joho/godotenv"
+    "os"
+    "database/sql"
 )
 
 type apiConfig struct {
     fileserverHits atomic.Int32
+    dbURL string
+    db *database.Queries
+    PLATFORM string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -23,7 +31,12 @@ func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
 
 func (cfg *apiConfig) resetHandler(w http.ResponseWriter, req *http.Request) {
     w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-    w.WriteHeader(200)
+    if cfg.PLATFORM != "dev" {
+        respondWithError(w, http.StatusForbidden, "Access denied")
+        return
+    }
+    cfg.db.DeleteAllUsers(req.Context())
+    w.WriteHeader(http.StatusOK)
     w.Write([]byte("Hits: "))
     w.Write([]byte(strconv.Itoa(0)))
     cfg.fileserverHits.Store(0)
@@ -40,67 +53,52 @@ func (cfg *apiConfig) countHandler(w http.ResponseWriter, req *http.Request) {
 </html>`,cfg.fileserverHits.Load())))
 }
 
-func validateHandler(w http.ResponseWriter, req *http.Request) {
-    const max_chirp_length = 140
-    type JsonParams struct{
-        Body string `json:"body"`
-    }
-    params := JsonParams{}
-    err := json.NewDecoder(req.Body).Decode(&params)
-    log.Printf("[validateHandler] Decoded Request:%v", params.Body)
-    if err != nil {
-        log.Printf("Error decoding parameters: %s", err)
-        w.WriteHeader(500)
-        return 
-    }
-    if len(params.Body) > max_chirp_length {
-        type respBody struct{
-            E string `json:"error"`
-        }
-        body := respBody{
-            E: "Chirp is too long",
-        }
-        data, err := json.Marshal(&body)
-        if err != nil {
-            log.Printf("Error marshalling response body, %s", err)
-            w.WriteHeader(500)
-            return 
-        }
-        w.WriteHeader(400)
-        w.Write(data)
-    }else {
-        type RespBody struct{
-            V bool `json:"valid"`
-        }
-        body := RespBody{
-            V: true,
-        }
-        data, err := json.Marshal(&body)
-        if err != nil {
-            log.Printf("Error marshalling response body, %s", err)
-            w.WriteHeader(500)
-            return 
-        }
-        w.Write(data)
-    }
-    w.Header().Set("Content-Type", "application/json; charset=utf-8")
-    //w.WriteHeader(200)
-}
-
 func hHandler(w http.ResponseWriter, req *http.Request) {
     w.Header().Set("Content-Type", "text/plain; charset=utf-8")
     w.WriteHeader(200)
     w.Write([]byte("OK"))
 }
 
+func replacePatterns(base string, patterns []string, profane_mask string) string{
+    split_base := strings.Split(base, " ")
+    masked := []string{}
+    for _, a_word := range(split_base) {
+        is_profane := false
+        for _, a_pattern := range(patterns) {
+            if strings.ToLower(a_word) == strings.ToLower(a_pattern) {
+                masked = append(masked, profane_mask)
+                is_profane = true
+                break
+            }
+        }
+        if !is_profane {
+            masked = append(masked, a_word)
+        }
+    }
+    return strings.Join(masked, " ")
+}
+
 func main(){
+    godotenv.Load()
+    dbURL := os.Getenv("DB_URL")
+    db, err := sql.Open("postgres", dbURL)
+    if err != nil {
+        return
+    }
+    dbQueries := database.New(db)
+    fmt.Println(dbQueries)
     mux := http.NewServeMux()
     hServer := http.Server{
         Addr: ":8080",
         Handler: mux,
     }
-    cfg := apiConfig{}
+    cfg := apiConfig{
+        dbURL: dbURL,
+        db : dbQueries,
+        PLATFORM : os.Getenv("PLATFORM"),
+    }
     mux.HandleFunc("POST /api/validate_chirp", validateHandler)
+    mux.HandleFunc("POST /api/users", cfg.usersHandler)
     mux.HandleFunc("GET /api/healthz", hHandler)
     mux.HandleFunc("GET /admin/metrics", cfg.countHandler)
     mux.HandleFunc("POST /admin/reset", cfg.resetHandler)

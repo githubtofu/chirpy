@@ -1,3 +1,11 @@
+package main
+
+import (
+    "net/http"
+    "encoding/json"
+    "log"
+)
+
 func validateHandler(w http.ResponseWriter, req *http.Request) {
     const max_chirp_length = 140
     type JsonParams struct{
@@ -15,18 +23,13 @@ func validateHandler(w http.ResponseWriter, req *http.Request) {
         respondWithError(w, http.StatusBadRequest, "Chirp is too long")
     }else {
         type RespBody struct{
-            V bool `json:"valid"`
+            V string `json:"cleaned_body"`
         }
-        body := RespBody{
-            V: true,
-        }
-        data, err := json.Marshal(&body)
-        if err != nil {
-            log.Printf("Error marshalling response body, %s", err)
-            w.WriteHeader(500)
-            return 
-        }
-        w.Write(data)
+        respondWithJSON(w, http.StatusOK, RespBody{
+            V: replacePatterns( string(params.Body),
+                []string{ "kerfuffle", "sharbert", "fornax" },
+                "****") })
+//func replacePatterns(base string, patterns []string, profane_mask string) string{
     }
-    w.Header().Set("Content-Type", "application/json; charset=utf-8")
     //w.WriteHeader(200)
+}
