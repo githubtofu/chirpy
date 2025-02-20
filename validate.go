@@ -16,7 +16,7 @@ func validateHandler(w http.ResponseWriter, req *http.Request) {
     log.Printf("[validateHandler] Decoded Request:%v", params.Body)
     if err != nil {
         log.Printf("Error decoding parameters: %s", err)
-        w.WriteHeader(500)
+        w.WriteHeader(http.StatusInternalServerError)
         return 
     }
     if len(params.Body) > max_chirp_length {

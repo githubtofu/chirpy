@@ -3,6 +3,7 @@ package main
 import _ "github.com/lib/pq"
 
 import (
+	"log"
     "net/http"
     "sync/atomic"
     "strconv"
@@ -19,6 +20,7 @@ type apiConfig struct {
     dbURL string
     db *database.Queries
     PLATFORM string
+	SECRET string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -92,13 +94,20 @@ func main(){
         Addr: ":8080",
         Handler: mux,
     }
+	s := os.Getenv("SECRET")
+	log.Println("[main] SECRET:", s)
     cfg := apiConfig{
         dbURL: dbURL,
         db : dbQueries,
         PLATFORM : os.Getenv("PLATFORM"),
+		SECRET : os.Getenv("SECRET"),
     }
     mux.HandleFunc("POST /api/validate_chirp", validateHandler)
     mux.HandleFunc("POST /api/users", cfg.usersHandler)
+    mux.HandleFunc("POST /api/chirps", cfg.chirpsHandler)
+    mux.HandleFunc("POST /api/login", cfg.loginHandler)
+    mux.HandleFunc("GET /api/chirps", cfg.getChirpsHandler)
+    mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.getAChirpHandler)
     mux.HandleFunc("GET /api/healthz", hHandler)
     mux.HandleFunc("GET /admin/metrics", cfg.countHandler)
     mux.HandleFunc("POST /admin/reset", cfg.resetHandler)
